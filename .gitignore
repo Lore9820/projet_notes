@@ -4,3 +4,5 @@ notes_from_notes(1).csv
 
 projet_notes/logs.csv
 projet_notes/notes.csv
+
+projet_notes/__pycache__/
