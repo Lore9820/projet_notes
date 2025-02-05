@@ -2,7 +2,5 @@ projet.pdf
 logs_from_logs(1).csv
 notes_from_notes(1).csv
 
-projet_notes/logs.csv
-projet_notes/notes.csv
-
 projet_notes/__pycache__/
+.ipynb_checkpoints/
