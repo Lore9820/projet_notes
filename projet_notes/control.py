@@ -30,6 +30,16 @@ def max_actions_par_jour(df_logs:pd.DataFrame):
     res = res.groupby('pseudo')['nb'].max().reset_index(name='max_nb')
     return res
 
+def nb_jours_avec_action(df_logs:pd.DataFrame):
+    """
+    Calcule le nombre de jours uniques où chaque pseudo a effectué une action.
+
+    :param df_logs: DataFrame contenant les logs
+    :return: DataFrame avec le nombre de jours avec action par pseudo
+    """
+    res = df_logs.groupby('pseudo')['jour'].nunique().reset_index(name='nb_jours_avec_action')
+    return res
+
 if __name__ == '__main__':
     import modele
 
@@ -39,9 +49,7 @@ if __name__ == '__main__':
     logs = modele.filter_logs(logs, notes)
     logs = modele.split_columns(logs)
 
-    nb_actions = nb_actions(logs)
-    print(nb_actions)
-
+    print(nb_actions(logs))
     print(moyenne_actions_par_jour(logs))
     print(max_actions_par_jour(logs))
-
+    print(nb_jours_avec_action(logs))
