@@ -1,6 +1,7 @@
 import logging
 import pandas as pd
 
+#features général
 def nb_actions(df_logs:pd.DataFrame):
     '''
     Calculer le nombre d'actions réalisées par chaque personne
@@ -10,6 +11,7 @@ def nb_actions(df_logs:pd.DataFrame):
     res = df_logs.groupby('pseudo').size().reset_index(name='nb')
     return res
 
+#features concernant les jours
 def moyenne_actions_par_jour(df_logs:pd.DataFrame):
     '''
     Calcule le nombre d'actions par jour
@@ -24,26 +26,138 @@ def max_actions_par_jour(df_logs:pd.DataFrame):
     '''
     Calcule le nombre d'actions par jour
     :param df_logs: DataFrame anonymisé avec les logs
-    :return:
+    :return: DataFrame pseudo -> max
     '''
     res = df_logs.groupby(['pseudo', 'jour']).size().reset_index(name='nb')
     res = res.groupby('pseudo')['nb'].max().reset_index(name='max_nb')
     return res
 
+def variabilite_activite(df_logs):
+    '''
+    Calcule la variabilité du nombre d'actions par jour, utilisant l'écart-type
+    :param df_logs: DataFrame anonymisé avec les logs
+    :return: DataFrame pseudo -> var
+    '''
+    res = df_logs.groupby(['pseudo', 'jour']).size().reset_index(name='nb')
+    res = res.groupby('pseudo')['nb'].std().reset_index(name='std_actions_par_jour')
+    return res
+
 def nb_jours_avec_action(df_logs:pd.DataFrame):
     """
     Calcule le nombre de jours uniques où chaque pseudo a effectué une action.
-
     :param df_logs: DataFrame contenant les logs
     :return: DataFrame avec le nombre de jours avec action par pseudo
     """
     res = df_logs.groupby('pseudo')['jour'].nunique().reset_index(name='nb_jours_avec_action')
     return res
 
+def tempsdiff(df_logs):
+    '''
+    Calcule le nombre de jours entre le premier jour et le dernier jour avec une action
+    :param df_logs: DataFrame contenant les logs
+    :return: DataFrame pseudo -> tempsdiff
+    '''
+    res = df_logs.groupby('pseudo')['jour'].agg(lambda x: (x.max() - x.min()).days).reset_index(name='tempsdiff_jours')
+    return res
+
+def constance_activite(df_logs):
+    '''
+    Calcule constance d'activite
+    :param df_logs: DataFrame contenant les logs
+    :return: dataframe pseudo -> constance
+    '''
+    nb_jours_avec_activite = nb_jours_avec_action(df_logs)
+    difftemps = tempsdiff(df_logs)
+    res = nb_jours_avec_activite.merge(difftemps, on='pseudo')
+    res['constance_activite'] = res['nb_jours_avec_action'] / res['tempsdiff_jours'].replace(0, 1)
+    return res[['pseudo', 'constance_activite']]
+
+
+def semaine_vs_weekend(df_logs):
+    df_logs['jour_semaine'] = pd.to_datetime(df_logs['jour']).dt.weekday  # lundi=0, dimanche=6
+    df_logs['is_weekend'] = df_logs['jour_semaine'] >= 5
+
+    activite_weekend = df_logs.groupby('pseudo')['is_weekend'].mean().reset_index(name='pct_weekend')
+    return activite_weekend
+
+#features avec heures
+def periode_moyen_activite(df_logs):
+    '''
+    Calcule la période moyenne d'activite par jour en minutes
+    :param df_logs: dataframe contenant les logs
+    :return: dataframe pseudo -> période moyenne d'activté par jour en minutes
+    '''
+    periode = df_logs.groupby(['pseudo', 'jour'])['heure'].agg(lambda x: (x.max() - x.min()).total_seconds() / 60)
+    res = periode.groupby('pseudo').mean().reset_index(name='activite_moyenne_par_jour_min')
+    return res
+
+def pourcentage_nuit(df_logs):
+    '''
+    Calcule la pourcentage d'activité pendant la nuit (entre 22h le soir et 7h du matin)
+    :param df_logs: dataframe contenant les logs
+    :return: DataFrame pseudo -> pourcentage d'activité la nuit
+    '''
+    df_logs['heure_seule'] = pd.to_datetime(df_logs['heures'], format="%H:%M:%S").dt.hour
+    df_logs['pourcentage_nuit'] = (df_logs['heure_seule'] < 7) | (df_logs['heure_seule'] >= 22)
+    res = df_logs.groupby('pseudo')['pourcentage_nuit'].mean().reset_index(name='pourcentage_nuit')
+    return res
+
+def pourcentage_matin(df_logs):
+    '''
+    Calcule la pourcentage d'activité le matin (entre 7h et 13h)
+    :param df_logs: dataframe contenant les logs
+    :return: DataFrame pseudo -> pourcentage d'activité le matin
+    '''
+    df_logs['heure_seule'] = pd.to_datetime(df_logs['heures'], format="%H:%M:%S").dt.hour
+    df_logs['pourcentage_matin'] = (df_logs['heure_seule'] >= 7) & (df_logs['heure_seule'] < 13)
+    res = df_logs.groupby('pseudo')['pourcentage_matin'].mean().reset_index(name='pourcentage_matin')
+    return res
+
+def pourcentage_aprem(df_logs):
+    '''
+    Calcule la pourcentage d'activité l'après-midi (entre 13h et 18h)
+    :param df_logs: dataframe contenant les logs
+    :return: DataFrame pseudo -> pourcentage d'activité l'après-midi
+    '''
+    df_logs['heure_seule'] = pd.to_datetime(df_logs['heures'], format="%H:%M:%S").dt.hour
+    df_logs['pourcentage_aprem'] = (df_logs['heure_seule'] >= 13) & (df_logs['heure_seule'] < 18)
+    res = df_logs.groupby('pseudo')['pourcentage_aprem'].mean().reset_index(name='pourcentage_aprem')
+    return res
+
+def pourcentage_soir(df_logs):
+    '''
+    Calcule la pourcentage d'activité le soir (entre 18h et 22h)
+    :param df_logs: dataframe contenant les logs
+    :return: DataFrame pseudo -> pourcentage d'activité le soir
+    '''
+    df_logs['heure_seule'] = pd.to_datetime(df_logs['heures'], format="%H:%M:%S").dt.hour
+    df_logs['pourcentage_soir'] = (df_logs['heure_seule'] >= 18) & (df_logs['heure_seule'] < 22)
+    res = df_logs.groupby('pseudo')['pourcentage_soir'].mean().reset_index(name='pourcentage_soir')
+    return res
+
+#features utilisant le componant
+def nb_composant(df_logs):
+    '''
+    Calcule le nombre de composants différentes
+    :param df_logs: DataFrame contenant les logs
+    :return: DataFrame pseudo -> nombre de composants
+    '''
+    res = df_logs.groupby('pseudo')['composant'].nunique().reset_index(name='nb_composant')
+    return res
+
+#features utilisant le contexte générale
+def nb_contexte_gen(df_logs):
+    '''
+    Calcule le nombre de contexte générale différentes
+    :param df_logs: DataFrame contenant les logs
+    :return: DataFrame pseudo -> nombre de contextes
+    '''
+    res = df_logs.groupby('pseudo')['contexte_general'].nunique().reset_index(name='nb_contexte')
+    return res
+
 if __name__ == '__main__':
     import modele
 
-    #test1
     logs = modele.get_logs()
     notes = modele.get_notes()
     logs = modele.filter_logs(logs, notes)
@@ -53,3 +167,14 @@ if __name__ == '__main__':
     print(moyenne_actions_par_jour(logs))
     print(max_actions_par_jour(logs))
     print(nb_jours_avec_action(logs))
+    print(variabilite_activite(logs))
+    print(tempsdiff(logs))
+    print(constance_activite(logs))
+    print(periode_moyen_activite(logs))
+    print(pourcentage_nuit(logs))
+    print(pourcentage_matin(logs))
+    print(pourcentage_aprem(logs))
+    print(pourcentage_soir(logs))
+    print(semaine_vs_weekend(logs))
+    print(nb_contexte_gen(logs))
+    print(nb_composant(logs))
