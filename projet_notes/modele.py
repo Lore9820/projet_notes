@@ -51,7 +51,7 @@ def split_columns(df_logs):
     df_logs[["contexte_general", "specification"]] = df_logs["contexte"].str.split(": ", n=1, expand=True)
     df_logs["jour"] = df_logs["heure"].dt.date
     df_logs["heures"] = df_logs["heure"].dt.time
-    df_logs = df_logs.drop(["contexte", "heure"], axis=1)
+    df_logs = df_logs.drop(["contexte"], axis=1)
     return df_logs
 
 if __name__ == "__main__":
