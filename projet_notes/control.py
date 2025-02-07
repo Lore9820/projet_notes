@@ -153,6 +153,17 @@ def nb_chaque_composant(df_logs):
     res = pd.crosstab(df_logs['pseudo'], df_logs['composant']).reset_index()
     return res
 
+def top_composant(df_logs):
+    '''
+    Calcule le composant le plus utilisé par pseudo
+    :param df_logs: dateframe contenant les logs
+    :return: dataframe pseudo -> le composant le plus utilisé
+    '''
+    top_composant = df_logs.groupby(['pseudo', 'composant']).size().reset_index(name='count')
+    res = top_composant.loc[top_composant.groupby('pseudo')['count'].idxmax(), ['pseudo', 'composant']]
+    res = res.rename(columns={'composant': 'top_composant'})
+    return res
+
 #features utilisant le contexte générale
 def nb_contexte_gen(df_logs):
     '''
@@ -172,6 +183,17 @@ def nb_chaque_contexte(df_logs):
     res = pd.crosstab(df_logs['pseudo'], df_logs['contexte_general']).reset_index()
     return res
 
+def top_contexte(df_logs):
+    '''
+    Calcule le contexte le plus utilisé par pseudo
+    :param df_logs: dateframe contenant les logs
+    :return: dataframe pseudo -> le contextes le plus utilisé
+    '''
+    top_contexte = df_logs.groupby(['pseudo', 'contexte_general']).size().reset_index(name='count')
+    res = top_contexte.loc[top_contexte.groupby('pseudo')['count'].idxmax(), ['pseudo', 'contexte_general']]
+    res = res.rename(columns={'contexte_general': 'top_contexte'})
+    return res
+
 #features utilisant l'evenement
 def nb_chaque_evenement(df_logs):
     """
@@ -180,6 +202,17 @@ def nb_chaque_evenement(df_logs):
     :return: DataFrame avec pseudo et le nombre d'activités pour chaque evenement
     """
     res = pd.crosstab(df_logs['pseudo'], df_logs['evenement']).reset_index()
+    return res
+
+def top_evenement(df_logs):
+    '''
+    Calcule l'evenement le plus utilisé par pseudo
+    :param df_logs: dateframe contenant les logs
+    :return: dataframe pseudo -> l'evenement le plus utilisé
+    '''
+    top_evenement = df_logs.groupby(['pseudo', 'evenement']).size().reset_index(name='count')
+    res = top_evenement.loc[top_evenement.groupby('pseudo')['count'].idxmax(), ['pseudo', 'evenement']]
+    res = res.rename(columns={'evenement': 'top_evenement'})
     return res
 
 #Créer le DataFrame pour analyses
@@ -199,8 +232,11 @@ def creer_df(df_logs):
     df = df.merge(nb_contexte_gen(df_logs), on="pseudo", how="left")
     df = df.merge(nb_composant(df_logs), on="pseudo", how="left")
     df = df.merge(nb_chaque_contexte(df_logs), on="pseudo", how="left")
+    df = df.merge(top_contexte(df_logs), on="pseudo", how="left")
     df = df.merge(nb_chaque_composant(df_logs), on="pseudo", how="left")
+    df = df.merge(top_composant(df_logs), on="pseudo", how="left")
     df = df.merge(nb_chaque_evenement(df_logs), on="pseudo", how="left")
+    df = df.merge(top_evenement(df_logs), on="pseudo", how="left")
     return df
 
 
@@ -213,4 +249,4 @@ if __name__ == '__main__':
     logs = modele.split_columns(logs)
 
     df = creer_df(logs)
-    print(df)
+    print(df.head(10))
