@@ -4,3 +4,5 @@ notes_from_notes(1).csv
 
 projet_notes/__pycache__/
 .ipynb_checkpoints/
+
+projet_notes/trashcode.py
