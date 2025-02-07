@@ -134,7 +134,7 @@ def pourcentage_soir(df_logs):
     res = df_logs.groupby('pseudo')['pourcentage_soir'].mean().reset_index(name='pourcentage_soir')
     return res
 
-#features utilisant le componant
+#features utilisant le composant
 def nb_composant(df_logs):
     '''
     Calcule le nombre de composants différentes
@@ -142,6 +142,16 @@ def nb_composant(df_logs):
     :return: DataFrame pseudo -> nombre de composants
     '''
     res = df_logs.groupby('pseudo')['composant'].nunique().reset_index(name='nb_composant')
+    return res
+
+def nb_chaque_composant(df_logs):
+    '''
+    Calcule le nombre d'activités de chaque composant
+    :param df_logs: dataframe contenant les logs
+    :return: dataframe avec pseudo et le nombre d'activités pour chaque composant
+    '''
+    res = pd.crosstab(df_logs['pseudo'], df_logs['composant'])
+    res = res.reset_index()
     return res
 
 #features utilisant le contexte générale
@@ -154,72 +164,6 @@ def nb_contexte_gen(df_logs):
     res = df_logs.groupby('pseudo')['contexte_general'].nunique().reset_index(name='nb_contexte')
     return res
 
-def nb_devoirs_remis(df_logs):
-    """
-    Calcule le nombre de fois que le pseudo a remis un travail de devoir
-    :param df_logs: DataFrame contenant les logs
-    :return: DataFrame psuedo -> nombre de devoirs remis
-    """
-    devoirs = df_logs[df_logs['evenement'] == "Travail de devoir remis"]
-    res = devoirs.groupby('pseudo').size().reset_index(name='nb_devoirs_remis')
-    res = df_logs[['pseudo']].drop_duplicates().merge(res, on='pseudo', how='left').fillna({'nb_devoirs_remis': 0})
-    return res
-
-def nb_devoirs_modifies(df_logs):
-    """
-    Calcule le nombre de fois que le pseudo a modifié un travail de devoir
-    :param df_logs: DataFrame contenant les logs
-    :return: DataFrame psuedo -> nombre de devoirs modifiés
-    """
-    devoirs = df_logs[df_logs['evenement'] == "Travail de devoir modifié"]
-    res = devoirs.groupby('pseudo').size().reset_index(name='nb_devoirs_modifies')
-    res = df_logs[['pseudo']].drop_duplicates().merge(res, on='pseudo', how='left').fillna({'nb_devoirs_modifies': 0})
-    return res
-
-def nb_cours_consultes(df_logs):
-    """
-    Calcule le nombre de fois que le pseudo a consulté un cours
-    :param df_logs: DataFrame contenant les logs
-    :return: DataFrame psuedo -> nombre de cours consultés
-    """
-    cours = df_logs[df_logs['evenement'] == "Cours consulté"]
-    res = cours.groupby('pseudo').size().reset_index(name='nb_cours_consultes')
-    res = df_logs[['pseudo']].drop_duplicates().merge(res, on='pseudo', how='left').fillna({'nb_cours_consultes': 0})
-    return res
-
-def nb_discussions_consultees(df_logs):
-    """
-    Calcule le nombre de fois que le pseudo a consulté une discussion
-    :param df_logs: DataFrame contenant les logs
-    :return: DataFrame psuedo -> nombre de discussion consultées
-    """
-    cours = df_logs[df_logs['evenement'] == "Discussion consultée"]
-    res = cours.groupby('pseudo').size().reset_index(name='nb_discussions_consultees')
-    res = df_logs[['pseudo']].drop_duplicates().merge(res, on='pseudo', how='left').fillna({'nb_discussions_consultees': 0})
-    return res
-
-def nb_questionnaires_soumis(df_logs):
-    """
-    Calcule le nombre de fois que le pseudo a soumis une questionnaire
-    :param df_logs: DataFrame contenant les logs
-    :return: DataFrame psuedo -> nombre de questionnaires soumis
-    """
-    cours = df_logs[df_logs['evenement'] == "Questionnaire soumis"]
-    res = cours.groupby('pseudo').size().reset_index(name='nb_questionnaires_soumis')
-    res = df_logs[['pseudo']].drop_duplicates().merge(res, on='pseudo', how='left').fillna({'nb_questionnaires_soumis': 0})
-    return res
-
-def nb_presences(df_logs):
-    """
-    Calcule le nombre de fois que le pseudo a renseigne une presence
-    :param df_logs: DataFrame contenant les logs
-    :return: DataFrame psuedo -> nombre de presences
-    """
-    cours = df_logs[df_logs['evenement'] == "Statut de présence renseigné par l’étudiant"]
-    res = cours.groupby('pseudo').size().reset_index(name='nb_presences')
-    res = df_logs[['pseudo']].drop_duplicates().merge(res, on='pseudo', how='left').fillna({'nb_presences': 0})
-    return res
-
 def nb_chaque_contexte(df_logs):
     """
     Calcule le nombre d'activités de chaque pseudo pour chaque contexte général.
@@ -227,6 +171,17 @@ def nb_chaque_contexte(df_logs):
     :return: DataFrame avec pseudo et le nombre d'activités pour chaque contexte
     """
     res = pd.crosstab(df_logs['pseudo'], df_logs['contexte_general'])
+    res = res.reset_index()
+    return res
+
+#features utilisant l'evenement
+def nb_chaque_evenement(df_logs):
+    """
+    Calcule le nombre d'activités de chaque pseudo pour chaque evenement.
+    :param df_logs: DataFrame contenant les logs
+    :return: DataFrame avec pseudo et le nombre d'activités pour chaque evenement
+    """
+    res = pd.crosstab(df_logs['pseudo'], df_logs['evenement'])
     res = res.reset_index()
     return res
 
@@ -253,10 +208,6 @@ if __name__ == '__main__':
     print(semaine_vs_weekend(logs))
     print(nb_contexte_gen(logs))
     print(nb_composant(logs))
-    print(nb_devoirs_remis(logs))
-    print(nb_devoirs_modifies(logs))
-    print(nb_cours_consultes(logs))
-    print(nb_discussions_consultees(logs))
-    print(nb_questionnaires_soumis(logs))
-    print(nb_presences(logs))
     print(nb_chaque_contexte(logs))
+    print(nb_chaque_composant(logs))
+    print(nb_chaque_evenement(logs))
