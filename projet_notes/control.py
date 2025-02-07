@@ -8,7 +8,7 @@ def nb_actions(df_logs:pd.DataFrame):
     :param data: dataset anonymisé avec les logs
     :return: DataFrame pseudo -> nb
     '''
-    res = df_logs.groupby('pseudo').size().reset_index(name='nb')
+    res = df_logs.groupby('pseudo').size().reset_index(name='nb_actions')
     return res
 
 #features concernant les jours
@@ -19,7 +19,7 @@ def moyenne_actions_par_jour(df_logs:pd.DataFrame):
     :return:
     '''
     res = df_logs.groupby(['pseudo', 'jour']).size().reset_index(name='nb')
-    res = res.groupby('pseudo')['nb'].mean().reset_index(name='moyenne_nb')
+    res = res.groupby('pseudo')['nb'].mean().reset_index(name='moyenne_nb_actions')
     return res
 
 def max_actions_par_jour(df_logs:pd.DataFrame):
@@ -29,7 +29,7 @@ def max_actions_par_jour(df_logs:pd.DataFrame):
     :return: DataFrame pseudo -> max
     '''
     res = df_logs.groupby(['pseudo', 'jour']).size().reset_index(name='nb')
-    res = res.groupby('pseudo')['nb'].max().reset_index(name='max_nb')
+    res = res.groupby('pseudo')['nb'].max().reset_index(name='max_nb_actions')
     return res
 
 def variabilite_activite(df_logs):
@@ -98,7 +98,7 @@ def pourcentage_nuit(df_logs):
     '''
     df_logs['heure_seule'] = pd.to_datetime(df_logs['heures'], format="%H:%M:%S").dt.hour
     df_logs['pourcentage_nuit'] = (df_logs['heure_seule'] < 7) | (df_logs['heure_seule'] >= 22)
-    res = df_logs.groupby('pseudo')['pourcentage_nuit'].mean().reset_index(name='pourcentage_nuit')
+    res = df_logs.groupby('pseudo')['pourcentage_nuit'].mean().reset_index(name='pourcentage_activite_nuit')
     return res
 
 def pourcentage_matin(df_logs):
@@ -109,7 +109,7 @@ def pourcentage_matin(df_logs):
     '''
     df_logs['heure_seule'] = pd.to_datetime(df_logs['heures'], format="%H:%M:%S").dt.hour
     df_logs['pourcentage_matin'] = (df_logs['heure_seule'] >= 7) & (df_logs['heure_seule'] < 13)
-    res = df_logs.groupby('pseudo')['pourcentage_matin'].mean().reset_index(name='pourcentage_matin')
+    res = df_logs.groupby('pseudo')['pourcentage_matin'].mean().reset_index(name='pourcentage_activite_matin')
     return res
 
 def pourcentage_aprem(df_logs):
@@ -120,7 +120,7 @@ def pourcentage_aprem(df_logs):
     '''
     df_logs['heure_seule'] = pd.to_datetime(df_logs['heures'], format="%H:%M:%S").dt.hour
     df_logs['pourcentage_aprem'] = (df_logs['heure_seule'] >= 13) & (df_logs['heure_seule'] < 18)
-    res = df_logs.groupby('pseudo')['pourcentage_aprem'].mean().reset_index(name='pourcentage_aprem')
+    res = df_logs.groupby('pseudo')['pourcentage_aprem'].mean().reset_index(name='pourcentage_activite_aprem')
     return res
 
 def pourcentage_soir(df_logs):
@@ -131,7 +131,7 @@ def pourcentage_soir(df_logs):
     '''
     df_logs['heure_seule'] = pd.to_datetime(df_logs['heures'], format="%H:%M:%S").dt.hour
     df_logs['pourcentage_soir'] = (df_logs['heure_seule'] >= 18) & (df_logs['heure_seule'] < 22)
-    res = df_logs.groupby('pseudo')['pourcentage_soir'].mean().reset_index(name='pourcentage_soir')
+    res = df_logs.groupby('pseudo')['pourcentage_soir'].mean().reset_index(name='pourcentage_activite_soir')
     return res
 
 #features utilisant le composant
@@ -150,8 +150,7 @@ def nb_chaque_composant(df_logs):
     :param df_logs: dataframe contenant les logs
     :return: dataframe avec pseudo et le nombre d'activités pour chaque composant
     '''
-    res = pd.crosstab(df_logs['pseudo'], df_logs['composant'])
-    res = res.reset_index()
+    res = pd.crosstab(df_logs['pseudo'], df_logs['composant']).reset_index()
     return res
 
 #features utilisant le contexte générale
@@ -170,8 +169,7 @@ def nb_chaque_contexte(df_logs):
     :param df_logs: DataFrame contenant les logs
     :return: DataFrame avec pseudo et le nombre d'activités pour chaque contexte
     """
-    res = pd.crosstab(df_logs['pseudo'], df_logs['contexte_general'])
-    res = res.reset_index()
+    res = pd.crosstab(df_logs['pseudo'], df_logs['contexte_general']).reset_index()
     return res
 
 #features utilisant l'evenement
@@ -181,9 +179,30 @@ def nb_chaque_evenement(df_logs):
     :param df_logs: DataFrame contenant les logs
     :return: DataFrame avec pseudo et le nombre d'activités pour chaque evenement
     """
-    res = pd.crosstab(df_logs['pseudo'], df_logs['evenement'])
-    res = res.reset_index()
+    res = pd.crosstab(df_logs['pseudo'], df_logs['evenement']).reset_index()
     return res
+
+#Créer le DataFrame pour analyses
+def creer_df(df_logs):
+    df = nb_actions(df_logs)
+    df = df.merge(moyenne_actions_par_jour(df_logs), on="pseudo", how="left")
+    df = df.merge(nb_jours_avec_action(df_logs), on="pseudo", how="left")
+    df = df.merge(variabilite_activite(df_logs), on="pseudo", how="left")
+    df = df.merge(tempsdiff(df_logs), on="pseudo", how="left")
+    df = df.merge(constance_activite(df_logs), on="pseudo", how="left")
+    df = df.merge(periode_moyen_activite(df_logs), on="pseudo", how="left")
+    df = df.merge(pourcentage_nuit(df_logs), on="pseudo", how="left")
+    df = df.merge(pourcentage_matin(df_logs), on="pseudo", how="left")
+    df = df.merge(pourcentage_aprem(df_logs), on="pseudo", how="left")
+    df = df.merge(pourcentage_soir(df_logs), on="pseudo", how="left")
+    df = df.merge(semaine_vs_weekend(df_logs), on="pseudo", how="left")
+    df = df.merge(nb_contexte_gen(df_logs), on="pseudo", how="left")
+    df = df.merge(nb_composant(df_logs), on="pseudo", how="left")
+    df = df.merge(nb_chaque_contexte(df_logs), on="pseudo", how="left")
+    df = df.merge(nb_chaque_composant(df_logs), on="pseudo", how="left")
+    df = df.merge(nb_chaque_evenement(df_logs), on="pseudo", how="left")
+    return df
+
 
 if __name__ == '__main__':
     import modele
@@ -193,21 +212,5 @@ if __name__ == '__main__':
     logs = modele.filter_logs(logs, notes)
     logs = modele.split_columns(logs)
 
-    print(nb_actions(logs))
-    print(moyenne_actions_par_jour(logs))
-    print(max_actions_par_jour(logs))
-    print(nb_jours_avec_action(logs))
-    print(variabilite_activite(logs))
-    print(tempsdiff(logs))
-    print(constance_activite(logs))
-    print(periode_moyen_activite(logs))
-    print(pourcentage_nuit(logs))
-    print(pourcentage_matin(logs))
-    print(pourcentage_aprem(logs))
-    print(pourcentage_soir(logs))
-    print(semaine_vs_weekend(logs))
-    print(nb_contexte_gen(logs))
-    print(nb_composant(logs))
-    print(nb_chaque_contexte(logs))
-    print(nb_chaque_composant(logs))
-    print(nb_chaque_evenement(logs))
+    df = creer_df(logs)
+    print(df)
