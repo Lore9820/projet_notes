@@ -32,7 +32,7 @@ def max_actions_par_jour(df_logs:pd.DataFrame):
     res = res.groupby('pseudo')['nb'].max().reset_index(name='max_nb_actions')
     return res
 
-def variabilite_activite(df_logs):
+def variabilite_activite(df_logs:pd.DataFrame):
     '''
     Calcule la variabilité du nombre d'actions par jour, utilisant l'écart-type
     :param df_logs: DataFrame anonymisé avec les logs
@@ -51,7 +51,7 @@ def nb_jours_avec_action(df_logs:pd.DataFrame):
     res = df_logs.groupby('pseudo')['jour'].nunique().reset_index(name='nb_jours_avec_action')
     return res
 
-def tempsdiff(df_logs):
+def tempsdiff(df_logs:pd.DataFrame):
     '''
     Calcule le nombre de jours entre le premier jour et le dernier jour avec une action
     :param df_logs: DataFrame contenant les logs
@@ -60,9 +60,9 @@ def tempsdiff(df_logs):
     res = df_logs.groupby('pseudo')['jour'].agg(lambda x: (x.max() - x.min()).days).reset_index(name='tempsdiff_jours')
     return res
 
-def constance_activite(df_logs):
+def constance_activite(df_logs:pd.DataFrame):
     '''
-    Calcule constance d'activite
+    Calcule constance d'activite (le nombre de jour avec activité divisé par le nombre de jours entre le premier jour et le dernier jour avec activité)
     :param df_logs: DataFrame contenant les logs
     :return: dataframe pseudo -> constance
     '''
@@ -72,7 +72,7 @@ def constance_activite(df_logs):
     res['constance_activite'] = res['nb_jours_avec_action'] / res['tempsdiff_jours'].replace(0, 1)
     return res[['pseudo', 'constance_activite']]
 
-def semaine_vs_weekend(df_logs):
+def semaine_vs_weekend(df_logs:pd.DataFrame):
     df_logs['jour_semaine'] = pd.to_datetime(df_logs['jour']).dt.weekday  # lundi=0, dimanche=6
     df_logs['is_weekend'] = df_logs['jour_semaine'] >= 5
 
@@ -80,7 +80,7 @@ def semaine_vs_weekend(df_logs):
     return res
 
 #features avec heures
-def periode_moyen_activite(df_logs):
+def periode_moyen_activite(df_logs:pd.DataFrame):
     '''
     Calcule la période moyenne d'activite par jour en minutes
     :param df_logs: dataframe contenant les logs
@@ -90,7 +90,7 @@ def periode_moyen_activite(df_logs):
     res = periode.groupby('pseudo').mean().reset_index(name='activite_moyenne_par_jour_min')
     return res
 
-def pourcentage_nuit(df_logs):
+def pourcentage_nuit(df_logs:pd.DataFrame):
     '''
     Calcule la pourcentage d'activité pendant la nuit (entre 22h le soir et 7h du matin)
     :param df_logs: dataframe contenant les logs
@@ -101,7 +101,7 @@ def pourcentage_nuit(df_logs):
     res = df_logs.groupby('pseudo')['pourcentage_nuit'].mean().reset_index(name='pourcentage_activite_nuit')
     return res
 
-def pourcentage_matin(df_logs):
+def pourcentage_matin(df_logs:pd.DataFrame):
     '''
     Calcule la pourcentage d'activité le matin (entre 7h et 13h)
     :param df_logs: dataframe contenant les logs
@@ -112,7 +112,7 @@ def pourcentage_matin(df_logs):
     res = df_logs.groupby('pseudo')['pourcentage_matin'].mean().reset_index(name='pourcentage_activite_matin')
     return res
 
-def pourcentage_aprem(df_logs):
+def pourcentage_aprem(df_logs:pd.DataFrame):
     '''
     Calcule la pourcentage d'activité l'après-midi (entre 13h et 18h)
     :param df_logs: dataframe contenant les logs
@@ -123,7 +123,7 @@ def pourcentage_aprem(df_logs):
     res = df_logs.groupby('pseudo')['pourcentage_aprem'].mean().reset_index(name='pourcentage_activite_aprem')
     return res
 
-def pourcentage_soir(df_logs):
+def pourcentage_soir(df_logs:pd.DataFrame):
     '''
     Calcule la pourcentage d'activité le soir (entre 18h et 22h)
     :param df_logs: dataframe contenant les logs
@@ -135,7 +135,7 @@ def pourcentage_soir(df_logs):
     return res
 
 #features utilisant le composant
-def nb_composant(df_logs):
+def nb_composant(df_logs:pd.DataFrame):
     '''
     Calcule le nombre de composants différentes
     :param df_logs: DataFrame contenant les logs
@@ -144,16 +144,17 @@ def nb_composant(df_logs):
     res = df_logs.groupby('pseudo')['composant'].nunique().reset_index(name='nb_composant')
     return res
 
-def nb_chaque_composant(df_logs):
+def nb_chaque_composant(df_logs:pd.DataFrame):
     '''
     Calcule le nombre d'activités de chaque composant
     :param df_logs: dataframe contenant les logs
     :return: dataframe avec pseudo et le nombre d'activités pour chaque composant
     '''
     res = pd.crosstab(df_logs['pseudo'], df_logs['composant']).reset_index()
+    res.columns = ['pseudo'] + [f"composant_{col}" for col in res.columns if col != 'pseudo']
     return res
 
-def top_composant(df_logs):
+def top_composant(df_logs:pd.DataFrame):
     '''
     Calcule le composant le plus utilisé par pseudo
     :param df_logs: dateframe contenant les logs
@@ -165,7 +166,7 @@ def top_composant(df_logs):
     return res
 
 #features utilisant le contexte générale
-def nb_contexte_gen(df_logs):
+def nb_contexte_gen(df_logs:pd.DataFrame):
     '''
     Calcule le nombre de contexte générale différentes
     :param df_logs: DataFrame contenant les logs
@@ -174,16 +175,17 @@ def nb_contexte_gen(df_logs):
     res = df_logs.groupby('pseudo')['contexte_general'].nunique().reset_index(name='nb_contexte')
     return res
 
-def nb_chaque_contexte(df_logs):
+def nb_chaque_contexte(df_logs:pd.DataFrame):
     """
     Calcule le nombre d'activités de chaque pseudo pour chaque contexte général.
     :param df_logs: DataFrame contenant les logs
     :return: DataFrame avec pseudo et le nombre d'activités pour chaque contexte
     """
     res = pd.crosstab(df_logs['pseudo'], df_logs['contexte_general']).reset_index()
+    res.columns = ['pseudo'] + [f"contexte_{col}" for col in res.columns if col != 'pseudo']
     return res
 
-def top_contexte(df_logs):
+def top_contexte(df_logs:pd.DataFrame):
     '''
     Calcule le contexte le plus utilisé par pseudo
     :param df_logs: dateframe contenant les logs
@@ -195,16 +197,17 @@ def top_contexte(df_logs):
     return res
 
 #features utilisant l'evenement
-def nb_chaque_evenement(df_logs):
+def nb_chaque_evenement(df_logs:pd.DataFrame):
     """
     Calcule le nombre d'activités de chaque pseudo pour chaque evenement.
     :param df_logs: DataFrame contenant les logs
     :return: DataFrame avec pseudo et le nombre d'activités pour chaque evenement
     """
     res = pd.crosstab(df_logs['pseudo'], df_logs['evenement']).reset_index()
+    res.columns = ['pseudo'] + [f"evenement_{col}" for col in res.columns if col != 'pseudo']
     return res
 
-def top_evenement(df_logs):
+def top_evenement(df_logs:pd.DataFrame):
     '''
     Calcule l'evenement le plus utilisé par pseudo
     :param df_logs: dateframe contenant les logs
@@ -216,7 +219,7 @@ def top_evenement(df_logs):
     return res
 
 #Créer le DataFrame pour analyses
-def creer_df(df_logs):
+def creer_df(df_logs:pd.DataFrame):
     df = nb_actions(df_logs)
     df = df.merge(moyenne_actions_par_jour(df_logs), on="pseudo", how="left")
     df = df.merge(nb_jours_avec_action(df_logs), on="pseudo", how="left")
@@ -239,6 +242,14 @@ def creer_df(df_logs):
     df = df.merge(top_evenement(df_logs), on="pseudo", how="left")
     return df
 
+def save_dataframe(df:pd.DataFrame, filename:str):
+    """
+    Slaat een pandas DataFrame op in een bestand.
+    :param df: DataFrame dat moet worden opgeslagen.
+    :param filename: Naam van het bestand (zonder extensie).
+    """
+    df.to_csv(f"{filename}.csv", index=False)
+    print(f"DataFrame opgeslagen als {filename}.csv")
 
 if __name__ == '__main__':
     import modele
@@ -247,6 +258,9 @@ if __name__ == '__main__':
     notes = modele.get_notes()
     logs = modele.filter_logs(logs, notes)
     logs = modele.split_columns(logs)
+    print(logs.head(10))
 
     df = creer_df(logs)
     print(df.head(10))
+
+    #save_dataframe(df, "df_complet")
