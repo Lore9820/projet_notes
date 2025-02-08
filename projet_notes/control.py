@@ -244,9 +244,9 @@ def creer_df(df_logs:pd.DataFrame):
 
 def save_dataframe(df:pd.DataFrame, filename:str):
     """
-    Slaat een pandas DataFrame op in een bestand.
-    :param df: DataFrame dat moet worden opgeslagen.
-    :param filename: Naam van het bestand (zonder extensie).
+    Ecrire le df créé dans un fichier csv
+    :param df: DataFrame à écrire
+    :param filename: nombre du fichier (sans extension)
     """
     df.to_csv(f"{filename}.csv", index=False)
     print(f"DataFrame opgeslagen als {filename}.csv")
