@@ -26,6 +26,7 @@ def get_notes(filename = DEFAULT_NOTES):
     '''
     try:
         notes = pd.read_csv(filename)
+        notes['note'] = notes['note'].replace('-', 0).astype(int)
         return notes
     except:
         logging.error(msg=f"Erreur de chargement du dataset : {filename}")
