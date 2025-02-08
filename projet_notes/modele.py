@@ -42,6 +42,16 @@ def filter_logs(df_logs, df_notes):
     logs = df_logs[df_logs["pseudo"].isin(df_notes["pseudo"])]
     return logs
 
+def filter_notes(df_notes, df_logs):
+    '''
+    Fonction qui permet d'enlever les lignes dans le DataFrame notes qui n'ont pas de pseudo correspondant dans le DataFrame logs
+    :param df_notes: le fichier avec les notes
+    :param df_logs: le fichier avec les logs
+    :return: le DataFrame notes filtré (lignes sans correspondance enlevé)
+    '''
+    notes = df_notes[df_notes["pseudo"].isin(df_logs["pseudo"])]
+    return notes
+
 def split_columns(df_logs):
     '''
     Fonction qui permet de séparer le colonne contexte en contexte générale et spécifications,
@@ -63,5 +73,6 @@ if __name__ == "__main__":
     print(get_notes())
 
     print(filter_logs(get_logs(), get_notes()).info())
+    print(filter_notes(get_notes(), get_logs()).shape)
 
-    print(split_columns(get_logs()))
+    #print(split_columns(get_logs()))
