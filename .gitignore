@@ -6,3 +6,4 @@ projet_notes/__pycache__/
 .ipynb_checkpoints/
 
 projet_notes/trashcode.py
+projet_notes/df_complet.csv
