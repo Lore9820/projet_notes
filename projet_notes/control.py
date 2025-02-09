@@ -3,6 +3,7 @@ import pandas as pd
 from pandas.core.interchange.dataframe_protocol import DataFrame
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import train_test_split
 
 #features général
 def nb_actions(df_logs:pd.DataFrame):
@@ -263,6 +264,21 @@ def save_dataframe(df:pd.DataFrame, filename:str):
     df.to_csv(f"{filename}.csv", index=False)
     print(f"DataFrame opgeslagen als {filename}.csv")
 
+# Train-set split
+def separation_train_test(df:pd.DataFrame, df_notes:pd.DataFrame):
+    """
+    Préparation basique des dataframes pour la suite de l'analyse
+    :param df: dataframe contenant les features
+    :param df_notes: dataframe contenant les notes
+    :return: un dataframe X_train avec les features et 80% des observations, un dataframe X_test avec les features et 20% des observations,
+    un vecteur y_train avec les notes de 80% des observations et un vecteur y_test avec les notes de 20% des observations
+    """
+    df_all = df.merge(df_notes, on="pseudo") #S'assurer que les deux df sont au même ordre
+    y = df_all["note"]
+    X = df_all.drop(["note", "pseudo"], axis=1)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1)
+    return X_train, X_test, y_train, y_test
+
 # Transformation du DataFrame logs
 def enlever_correlations_complets(df:DataFrame):
     """
@@ -302,7 +318,7 @@ def scaling(df:pd.DataFrame):
     """
     Permet de standardiser un dataframe antérieurement encodé. MinMax est utilisé pour garder les colonnes binaires
     :param df: Dataframe avec seulement valeurs numériques
-    :return: Dataframe avec colonnes standardiser
+    :return: Dataframe avec colonnes scaled
     """
     df_scaled = df.copy()
     cols_to_scale = df_scaled.columns.difference(['pseudo'])
@@ -322,7 +338,7 @@ def df_transformer(df:pd.DataFrame):
     """
     Permet de transformer le dataframe et le mettre en bon format pour utiliser dans les modèles de machine learning
     :param df: Dataframe avec les features
-    :return: Dataframe transformé sans variables corrélées à 100%, toutes les variables numériques (encodé) et scalées
+    :return: Dataframe transformé sans variables corrélées à 100%, toutes les variables numériques (encodées) et scalées
     """
     df = enlever_correlations_complets(df)
     df = encodage(df)
@@ -345,8 +361,17 @@ if __name__ == '__main__':
     print(df.head(10))
     print(df.shape)
 
+    X_train, X_test, y_train, y_test = separation_train_test(df, notes)
+    print(X_train.shape, y_train.shape)
+    print(X_test.shape, y_test.shape)
+    print(X_train.head())
+
+    X_train_encode = encodage(X_train)
+    print(X_train_encode.shape)
+    print(X_train_encode.head())
+
     #save_dataframe(df, "df_complet")
 
-    df_cleaned = df_transformer(df)
-    print(df_cleaned.head(10))
-    print(df_cleaned.shape)
+    #df_cleaned = df_transformer(X_train)
+    #print(df_cleaned.head(10))
+    #print(df_cleaned.shape)
