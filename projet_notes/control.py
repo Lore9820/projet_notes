@@ -1,7 +1,8 @@
 import logging
 import pandas as pd
 from pandas.core.interchange.dataframe_protocol import DataFrame
-
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import MinMaxScaler
 
 #features général
 def nb_actions(df_logs:pd.DataFrame):
@@ -281,6 +282,34 @@ def enlever_correlations_complets(df:DataFrame):
     #print(df.shape)
     return df_cleaned
 
+def encodage(df:pd.DataFrame):
+    """
+    Fonction qui permet d'encoder les variables catégorielles
+    :param df: Dataframes avec les features
+    :return: Dateframe avec seulement des variables numériques
+    """
+    encoder = OneHotEncoder(sparse_output=False)
+    categorical_cols = df.select_dtypes(include='object').columns
+    encoded_array = encoder.fit_transform(df[categorical_cols])
+
+    encoded_cols = encoder.get_feature_names_out(categorical_cols)
+    df_encoded = pd.DataFrame(encoded_array, columns=encoded_cols)
+    df_encode = df.drop(columns=categorical_cols).join(df_encoded)
+
+    return df_encode
+
+def scaling(df:pd.DataFrame):
+    """
+    Permet de standardiser un dataframe antérieurement encodé. MinMax est utilisé pour garder les colonnes binaires
+    :param df: Dataframe avec seulement valeurs numériques
+    :return: Dataframe avec colonnes standardiser
+    """
+    df_scaled = df.copy()
+    cols_to_scale = df_scaled.columns.difference(['pseudo'])
+    scaler = MinMaxScaler()
+    df_scaled[cols_to_scale] = scaler.fit_transform(df_scaled[cols_to_scale])
+    return df_scaled
+
 def reduction_dimensions(df:pd.DataFrame):
     """
 
@@ -288,6 +317,17 @@ def reduction_dimensions(df:pd.DataFrame):
     :return:
     """
     pass
+
+def df_transformer(df:pd.DataFrame):
+    """
+    Permet de transformer le dataframe et le mettre en bon format pour utiliser dans les modèles de machine learning
+    :param df: Dataframe avec les features
+    :return: Dataframe transformé sans variables corrélées à 100%, toutes les variables numériques (encodé) et scalées
+    """
+    df = enlever_correlations_complets(df)
+    df = encodage(df)
+    df = scaling(df)
+    return df
 
 if __name__ == '__main__':
     import modele
@@ -307,6 +347,6 @@ if __name__ == '__main__':
 
     #save_dataframe(df, "df_complet")
 
-    df_cleaned = enlever_correlations_complets(df)
+    df_cleaned = df_transformer(df)
     print(df_cleaned.head(10))
     print(df_cleaned.shape)
