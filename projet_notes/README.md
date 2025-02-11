@@ -5,4 +5,6 @@ Dans le fichier **modele.py** on trouve les fonctions qui vont permettre de char
 
 ### Fonctions
 - *get_logs* : charger les données des logs.
-- *get_notes* : charger les données 
+- *get_notes* : charger les données
+
+
