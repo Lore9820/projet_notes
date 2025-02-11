@@ -183,6 +183,15 @@ def nb_contexte_gen(df_logs:pd.DataFrame):
     res = df_logs.groupby('pseudo')['contexte_general'].nunique().reset_index(name='nb_contexte')
     return res
 
+def nb_specifications(df_logs:pd.DataFrame):
+    """
+    Calcule le nombre de specifications de contexte différentes
+    :param df_logs: DataFrame contenant les logs
+    :return: DataFrame pseudo -> nombre de specifications de contexte différentes
+    """
+    res = df_logs.groupby('pseudo')['specification'].nunique().reset_index(name='nb_specification')
+    return res
+
 def nb_chaque_contexte(df_logs:pd.DataFrame):
     """
     Calcule le nombre d'activités de chaque pseudo pour chaque contexte général.
@@ -205,6 +214,15 @@ def top_contexte(df_logs:pd.DataFrame):
     return res
 
 #features utilisant l'evenement
+def nb_evenement(df_logs:pd.DataFrame):
+    """
+    Calcule le nombre de evenements différentes
+    :param df_logs: DataFrame contenant les logs
+    :return: DataFrame pseudo -> nombre de evenements différents
+    """
+    res = df_logs.groupby('pseudo')['evenement'].nunique().reset_index(name='nb_evenement')
+    return res
+
 def nb_chaque_evenement(df_logs:pd.DataFrame):
     """
     Calcule le nombre d'activités de chaque pseudo pour chaque evenement.
@@ -246,11 +264,13 @@ def creer_df(df_logs:pd.DataFrame):
     df = df.merge(pourcentage_soir(df_logs), on="pseudo", how="left")
     df = df.merge(semaine_vs_weekend(df_logs), on="pseudo", how="left")
     df = df.merge(nb_contexte_gen(df_logs), on="pseudo", how="left")
+    df = df.merge(nb_specifications(df_logs), on='pseudo', how='left')
     df = df.merge(nb_composant(df_logs), on="pseudo", how="left")
     df = df.merge(nb_chaque_contexte(df_logs), on="pseudo", how="left")
     df = df.merge(top_contexte(df_logs), on="pseudo", how="left")
     df = df.merge(nb_chaque_composant(df_logs), on="pseudo", how="left")
     df = df.merge(top_composant(df_logs), on="pseudo", how="left")
+    df = df.merge(nb_evenement(df_logs), on="pseudo", how="left")
     df = df.merge(nb_chaque_evenement(df_logs), on="pseudo", how="left")
     df = df.merge(top_evenement(df_logs), on="pseudo", how="left")
     return df
