@@ -2,8 +2,8 @@ import logging
 import sys
 import pandas as pd
 
-DEFAULT_LOGS = "logs.csv"
-DEFAULT_NOTES = "notes.csv"
+DEFAULT_LOGS = "../data/logs.csv"
+DEFAULT_NOTES = "../data/notes.csv"
 
 def get_logs(filename = DEFAULT_LOGS):
     '''
