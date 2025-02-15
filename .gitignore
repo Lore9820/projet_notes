@@ -2,8 +2,8 @@ projet.pdf
 logs_from_logs(1).csv
 notes_from_notes(1).csv
 
-projet_notes/__pycache__/
+*/*__pycache__*
 .ipynb_checkpoints/
 
 projet_notes/trashcode.py
-projet_notes/df_complet.csv
+projet_notes/data/df_complet.csv
