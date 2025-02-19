@@ -4,6 +4,8 @@ from pandas.core.interchange.dataframe_protocol import DataFrame
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
+from sklearn.decomposition import PCA
+from controllers.features_creation import *
 
 #Créer le DataFrame pour analyses
 def creer_df(df_logs:pd.DataFrame):
@@ -34,6 +36,12 @@ def creer_df(df_logs:pd.DataFrame):
     df = df.merge(nb_evenement(df_logs), on="pseudo", how="left")
     df = df.merge(nb_chaque_evenement(df_logs), on="pseudo", how="left")
     df = df.merge(top_evenement(df_logs), on="pseudo", how="left")
+
+    #Remplacer les espaces et les tirets par des underscores
+    for col in df.columns:
+        if (' ' in col or '-' in col):
+            df = df.rename(columns={col: col.replace(' ', '_').replace('-', '_')})
+
     return df
 
 def save_dataframe(df:pd.DataFrame, filename:str):
@@ -65,7 +73,7 @@ def enlever_correlations_complets(df:DataFrame):
     """
     Enlève les features qui on une corrélation de 1 (deuxième encontré est enlèvé)
     :param df: Dataframe avec les features
-    :return: Dataframe avec moins de features
+    :return: Dataframe sans doublons
     """
     corr_matrix = df.select_dtypes(include=['float64', 'int64']).corr()
     columns_to_drop = []
@@ -127,7 +135,7 @@ def df_transformer(df:pd.DataFrame):
     return df
 
 if __name__ == '__main__':
-    import modele
+    import models.read_files as modele
 
     logs = modele.get_logs()
     notes = modele.get_notes()
@@ -141,7 +149,9 @@ if __name__ == '__main__':
     df = creer_df(logs)
     print(df.head(10))
     print(df.shape)
+    print(df.columns)
 
+    """
     X_train, X_test, y_train, y_test = separation_train_test(df, notes)
     print(X_train.shape, y_train.shape)
     print(X_test.shape, y_test.shape)
@@ -150,6 +160,7 @@ if __name__ == '__main__':
     X_train_encode = encodage(X_train)
     print(X_train_encode.shape)
     print(X_train_encode.head())
+    """
 
     #save_dataframe(df, "df_complet")
 
