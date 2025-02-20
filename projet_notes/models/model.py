@@ -1,4 +1,4 @@
-from controllers.control import *
+from controllers.preprocessing import *
 import statsmodels.api as sm
 import numpy as np
 import statsmodels.formula.api as smf
@@ -44,9 +44,10 @@ if __name__ == '__main__':
     df = creer_df(logs)
     df = df_transformer(df)
     X_train, X_test, y_train, y_test = separation_train_test(df, notes)
-    print(features)
+    print(X_train.head())
+    '''print(features)
     print(adj_R2)
-    '''model, results = my_linear_regression(X_train, y_train)
+    model, results = my_linear_regression(X_train, y_train)
     pred = predict_model(model, X_test)
     rmse_ols = rmse_model(pred, y_test)
     print(model)

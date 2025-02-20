@@ -6,6 +6,7 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 from sklearn.decomposition import PCA
 from controllers.features_creation import *
+import re
 
 #Créer le DataFrame pour analyses
 def creer_df(df_logs:pd.DataFrame):
@@ -36,12 +37,6 @@ def creer_df(df_logs:pd.DataFrame):
     df = df.merge(nb_evenement(df_logs), on="pseudo", how="left")
     df = df.merge(nb_chaque_evenement(df_logs), on="pseudo", how="left")
     df = df.merge(top_evenement(df_logs), on="pseudo", how="left")
-
-    #Remplacer les espaces et les tirets par des underscores
-    for col in df.columns:
-        if (' ' in col or '-' in col):
-            df = df.rename(columns={col: col.replace(' ', '_').replace('-', '_')})
-
     return df
 
 def save_dataframe(df:pd.DataFrame, filename:str):
@@ -132,6 +127,12 @@ def df_transformer(df:pd.DataFrame):
     df = enlever_correlations_complets(df)
     df = encodage(df)
     df = scaling(df)
+
+    #Remplacer les espaces et les tirets par des underscores
+    for col in df.columns:
+        new_col = re.sub(r'\W+', '_', col)
+        df = df.rename(columns={col: new_col})
+
     return df
 
 if __name__ == '__main__':
@@ -151,13 +152,13 @@ if __name__ == '__main__':
     print(df.shape)
     print(df.columns)
 
-    """
     X_train, X_test, y_train, y_test = separation_train_test(df, notes)
     print(X_train.shape, y_train.shape)
     print(X_test.shape, y_test.shape)
+    pd.set_option('display.max_columns', None)
     print(X_train.head())
 
-    X_train_encode = encodage(X_train)
+    """X_train_encode = encodage(X_train)
     print(X_train_encode.shape)
     print(X_train_encode.head())
     """

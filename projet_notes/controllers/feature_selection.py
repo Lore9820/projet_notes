@@ -1,8 +1,9 @@
 import pandas as pd
+from models.model import my_linear_regression
 
 def forward_feature_selection(X: pd.DataFrame, y: pd.Series):
     """
-    Fait une séléction de features utilisant un forward feature selection.
+    Fait une séléction de features utilisant forward feature selection.
     :param:
     X: DataFrame avec les features
     y (pd.Series): Series avec le target
@@ -12,7 +13,7 @@ def forward_feature_selection(X: pd.DataFrame, y: pd.Series):
     dict: Dictionaire avec les features incluses et les R² adjusted
     """
     selected_features = []
-    remaining_features = X.columns.tolist()  # Kopie van featurelijst
+    remaining_features = X.columns.tolist()
     adj_R2_dict = {}
     prev_adj_R2 = 0
 
@@ -23,14 +24,10 @@ def forward_feature_selection(X: pd.DataFrame, y: pd.Series):
         for feature in remaining_features:
             # Maak een tijdelijke DataFrame met geselecteerde features en target
             df_temp = X[selected_features + [feature]].copy()
-            df_temp['target'] = y  # Voeg de target toe
-
-            # Fix feature-namen met Q()
-            sanitized_features = df_temp.drop(columns=['target'])
 
             # Bouw de formule dynamisch
-            formula = f"target ~ {' + '.join(sanitized_features)}"
-            model = smf.ols(formula, data=df_temp).fit()
+            formula = f"target ~ {' + '.join(selected_features + [feature])}"
+            model, results = my_linear_regression(X=df_temp, y=y, formula=formula)
             adj_R2 = model.rsquared_adj
 
             if adj_R2 > best_adj_R2:
@@ -48,3 +45,20 @@ def forward_feature_selection(X: pd.DataFrame, y: pd.Series):
         prev_adj_R2 = best_adj_R2
 
     return selected_features, adj_R2_dict
+
+if __name__ == '__main__':
+    from models.read_files import *
+    from models.model import separation_train_test
+    from controllers.preprocessing import *
+    logs = get_logs()
+    notes = get_notes()
+    logs = filter_logs(logs, notes)
+    logs = split_columns(logs)
+    notes = filter_notes(notes, logs)
+    df = creer_df(logs)
+    pd.set_option('display.max_columns', None)
+    df = df_transformer(df)
+    X_train, X_test, y_train, y_test = separation_train_test(df, notes)
+    features, adj_R2 = forward_feature_selection(X_train, y_train)
+    print(features)
+    print(adj_R2)
