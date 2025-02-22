@@ -75,4 +75,4 @@ if __name__ == "__main__":
     print(filter_logs(get_logs(), get_notes()).info())
     print(filter_notes(get_notes(), get_logs()).shape)
 
-    #print(split_columns(get_logs()))
+    print(split_columns(get_logs()))
