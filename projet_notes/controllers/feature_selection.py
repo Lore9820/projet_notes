@@ -1,3 +1,4 @@
+# Description: Ce fichier contient les fonctions pour la sélection de features.
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
@@ -30,7 +31,7 @@ def forward_feature_selection(X: pd.DataFrame, y: pd.Series, taux: float = 0.001
 
             # Construire la formule pour la régression linéaire, entrainer le modèle et obtenir le R² ajusté
             formula = f"target ~ {' + '.join(selected_features + [feature])}"
-            model, results = my_linear_regression(X=df_temp, y=y, formula=formula)
+            model = my_linear_regression(X=df_temp, y=y, formula=formula).fit()
             adj_R2 = model.rsquared_adj
 
             # Mettre à jour le meilleur R² ajusté et la meilleure feature

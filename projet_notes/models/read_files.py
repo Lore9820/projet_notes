@@ -1,9 +1,10 @@
+# Description: Module qui permet de lire les fichiers csv avec les logs et les notes, de les filtrer et de les transformer pour l'analyse
 import logging
 import sys
 import pandas as pd
 
-DEFAULT_LOGS = "../data/logs.csv"
-DEFAULT_NOTES = "../data/notes.csv"
+DEFAULT_LOGS = "data/logs.csv"
+DEFAULT_NOTES = "data/notes.csv"
 
 def get_logs(filename = DEFAULT_LOGS):
     '''

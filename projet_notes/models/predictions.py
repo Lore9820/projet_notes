@@ -17,3 +17,6 @@ if __name__ == "__main__":
     logs = split_columns(logs)
     df = creer_df(logs)
     df = df_transformer(df)
+    df = df_aligned(df, expected_columns=model.get_params()["features"])
+
+    print(predict(df))

@@ -1,6 +1,4 @@
-import logging
 import pandas as pd
-from pandas.core.interchange.dataframe_protocol import DataFrame
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
@@ -64,7 +62,7 @@ def separation_train_test(df:pd.DataFrame, df_notes:pd.DataFrame):
     return X_train, X_test, y_train, y_test
 
 # Transformation du DataFrame logs
-def enlever_correlations_complets(df:DataFrame):
+def enlever_correlations_complets(df:pd.DataFrame):
     """
     Enlève les features qui on une corrélation de 1 (deuxième encontré est enlèvé)
     :param df: Dataframe avec les features
@@ -90,10 +88,10 @@ def encodage(df:pd.DataFrame):
     """
     encoder = OneHotEncoder(sparse_output=False)
     categorical_cols = df.select_dtypes(include='object').columns
-    encoded_array = encoder.fit_transform(df[categorical_cols])
 
+    encoded_array = encoder.fit_transform(df[categorical_cols])
     encoded_cols = encoder.get_feature_names_out(categorical_cols)
-    df_encoded = pd.DataFrame(encoded_array, columns=encoded_cols)
+    df_encoded = pd.DataFrame(encoded_array, columns=encoded_cols, index=df.index)
     df_encode = df.drop(columns=categorical_cols).join(df_encoded)
 
     return df_encode
@@ -128,18 +126,41 @@ def df_transformer(df:pd.DataFrame):
     df = encodage(df)
     df = scaling(df)
 
-    #Remplacer les espaces et les tirets par des underscores
+    #Remplacer les espaces, les tirets et autres caractères speciaux par des underscores
     for col in df.columns:
         new_col = re.sub(r'\W+', '_', col)
         df = df.rename(columns={col: new_col})
 
     return df
 
+def align_columns(df: pd.DataFrame, expected_columns: list) -> pd.DataFrame:
+    """
+    Ensures the DataFrame has only the columns specified in expected_columns.
+    - Removes columns not in expected_columns.
+    - Adds missing columns with default value 0.
+
+    :param df: Input DataFrame
+    :param expected_columns: List of expected column names
+    :return: DataFrame with aligned columns
+    """
+    # Drop columns not in expected_columns
+    df = df[[col for col in expected_columns if col in df.columns]]
+
+    # Add missing columns with default value 0
+    for col in expected_columns:
+        if col not in df.columns:
+            df[col] = 0
+
+    # Ensure column order matches expected_columns
+    return df[expected_columns]
+
+import pandas as pd
+
 if __name__ == '__main__':
     import models.read_files as modele
 
-    logs = modele.get_logs()
-    notes = modele.get_notes()
+    logs = modele.get_logs("../data/logs.csv")
+    notes = modele.get_notes("../data/notes.csv")
     logs = modele.filter_logs(logs, notes)
     logs = modele.split_columns(logs)
     notes = modele.filter_notes(notes, logs)
@@ -152,19 +173,21 @@ if __name__ == '__main__':
     print(df.shape)
     print(df.columns)
 
+
     X_train, X_test, y_train, y_test = separation_train_test(df, notes)
     print(X_train.shape, y_train.shape)
     print(X_test.shape, y_test.shape)
     pd.set_option('display.max_columns', None)
     print(X_train.head())
 
-    """X_train_encode = encodage(X_train)
+    X_train_encode = encodage(X_train)
     print(X_train_encode.shape)
-    print(X_train_encode.head())
-    """
+    print(X_train_encode.head(10))
+
 
     #save_dataframe(df, "df_complet")
 
-    #df_cleaned = df_transformer(X_train)
-    #print(df_cleaned.head(10))
-    #print(df_cleaned.shape)
+    """df_cleaned = df_transformer(X_train)
+    print(df_cleaned.head(10))
+    print(df_cleaned.shape)
+    print(df_cleaned.columns)"""

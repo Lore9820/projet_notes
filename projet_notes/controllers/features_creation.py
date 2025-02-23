@@ -1,3 +1,4 @@
+# Description: Ce fichier contient les fonctions pour créer les features à partir des logs
 import pandas as pd
 
 #features général
@@ -99,7 +100,7 @@ def pourcentage_nuit(df_logs:pd.DataFrame):
     :param df_logs: dataframe contenant les logs
     :return: DataFrame pseudo -> pourcentage d'activité la nuit
     """
-    df_logs['heure_seule'] = pd.to_datetime(df_logs['heures'], format="%H:%M:%S").dt.hour
+    df_logs['heure_seule'] = df_logs["heure"].dt.hour
     df_logs['pourcentage_nuit'] = (df_logs['heure_seule'] < 7) | (df_logs['heure_seule'] >= 22)
     res = df_logs.groupby('pseudo')['pourcentage_nuit'].mean().reset_index(name='pourcentage_activite_nuit')
     return res
@@ -110,7 +111,7 @@ def pourcentage_matin(df_logs:pd.DataFrame):
     :param df_logs: dataframe contenant les logs
     :return: DataFrame pseudo -> pourcentage d'activité le matin
     """
-    df_logs['heure_seule'] = pd.to_datetime(df_logs['heures'], format="%H:%M:%S").dt.hour
+    df_logs['heure_seule'] = df_logs["heure"].dt.hour
     df_logs['pourcentage_matin'] = (df_logs['heure_seule'] >= 7) & (df_logs['heure_seule'] < 13)
     res = df_logs.groupby('pseudo')['pourcentage_matin'].mean().reset_index(name='pourcentage_activite_matin')
     return res
@@ -121,7 +122,7 @@ def pourcentage_aprem(df_logs:pd.DataFrame):
     :param df_logs: dataframe contenant les logs
     :return: DataFrame pseudo -> pourcentage d'activité l'après-midi
     """
-    df_logs['heure_seule'] = pd.to_datetime(df_logs['heures'], format="%H:%M:%S").dt.hour
+    df_logs['heure_seule'] = df_logs["heure"].dt.hour
     df_logs['pourcentage_aprem'] = (df_logs['heure_seule'] >= 13) & (df_logs['heure_seule'] < 18)
     res = df_logs.groupby('pseudo')['pourcentage_aprem'].mean().reset_index(name='pourcentage_activite_aprem')
     return res
@@ -132,7 +133,7 @@ def pourcentage_soir(df_logs:pd.DataFrame):
     :param df_logs: dataframe contenant les logs
     :return: DataFrame pseudo -> pourcentage d'activité le soir
     """
-    df_logs['heure_seule'] = pd.to_datetime(df_logs['heures'], format="%H:%M:%S").dt.hour
+    df_logs['heure_seule'] = df_logs["heure"].dt.hour
     df_logs['pourcentage_soir'] = (df_logs['heure_seule'] >= 18) & (df_logs['heure_seule'] < 22)
     res = df_logs.groupby('pseudo')['pourcentage_soir'].mean().reset_index(name='pourcentage_activite_soir')
     return res
@@ -155,6 +156,7 @@ def nb_chaque_composant(df_logs:pd.DataFrame):
     """
     res = pd.crosstab(df_logs['pseudo'], df_logs['composant']).reset_index()
     res.columns = ['pseudo'] + [f"composant_{col}" for col in res.columns if col != 'pseudo']
+    res = res.fillna(0)
     return res
 
 def top_composant(df_logs:pd.DataFrame):
@@ -195,6 +197,7 @@ def nb_chaque_contexte(df_logs:pd.DataFrame):
     """
     res = pd.crosstab(df_logs['pseudo'], df_logs['contexte_general']).reset_index()
     res.columns = ['pseudo'] + [f"contexte_{col}" for col in res.columns if col != 'pseudo']
+    res = res.fillna(0)
     return res
 
 def top_contexte(df_logs:pd.DataFrame):
@@ -226,6 +229,7 @@ def nb_chaque_evenement(df_logs:pd.DataFrame):
     """
     res = pd.crosstab(df_logs['pseudo'], df_logs['evenement']).reset_index()
     res.columns = ['pseudo'] + [f"evenement_{col}" for col in res.columns if col != 'pseudo']
+    res = res.fillna(0)
     return res
 
 def top_evenement(df_logs:pd.DataFrame):
