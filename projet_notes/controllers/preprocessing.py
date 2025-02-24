@@ -133,7 +133,7 @@ def df_transformer(df:pd.DataFrame):
 
     return df
 
-def align_columns(df: pd.DataFrame, expected_columns: list) -> pd.DataFrame:
+def align_columns(df: pd.DataFrame, expected_columns: list):
     """
     Ensures the DataFrame has only the columns specified in expected_columns.
     - Removes columns not in expected_columns.
@@ -153,8 +153,6 @@ def align_columns(df: pd.DataFrame, expected_columns: list) -> pd.DataFrame:
 
     # Ensure column order matches expected_columns
     return df[expected_columns]
-
-import pandas as pd
 
 if __name__ == '__main__':
     import models.read_files as modele

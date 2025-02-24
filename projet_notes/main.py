@@ -4,14 +4,13 @@ from models.read_files import *
 from controllers.preprocessing import *
 from controllers.feature_selection import *
 
-
+# Suppress convergence warnings
+import warnings
+warnings.filterwarnings("ignore", category=ConvergenceWarning)
 
 if __name__ == '__main__':
     #logs_file = input("Saissisez le nom du fichier avec les logs (fichier csv, inclure l'extension) :")
     #notes_file = input("Saissisez le nom du fichier avec les notes (fichier csv, inclure l'extension) :")
-
-    from models.read_files import *
-    from controllers.feature_selection import *
 
     logs = get_logs("data/logs.csv")
     notes = get_notes("data/notes.csv")
@@ -25,37 +24,42 @@ if __name__ == '__main__':
     print(X_train.head())
 
     # All features
-    sel_all = X_train.columns
+    select_all = X_train.columns
     # Selected features, Lasso feature selection
-    sel_lasso = lasso_feature_selection(X_train, y_train)
+    select_lasso = lasso_feature_selection(X_train, y_train)
     # Selected features, forward feature selection
-    sel_forward, summary = forward_feature_selection(X_train, y_train, taux=0.01)
+    select_forward, summary = forward_feature_selection(X_train, y_train, taux=0.01)
 
     # Regroupement des features selectionnées
-    sels = [sel_all, sel_lasso, sel_forward]
+    selects = [select_all, select_lasso, select_forward]
+    select_names = ["All Features", "Lasso Features", "Forward Features"]
 
-    # Définiton et fit  des modèles linéaires
-    models_lm = []
-    model_names = ["All Features", "Lasso Features", "Forward Features"]
-    for sel, name in zip(sels, model_names):
-        model = fit_linear_regression_sklearn(X_train[sel], y_train)
-        models_lm.append((name, model))
+    # Définition des modèles à tester
+    models = { "Linear_Regression" : LinearRegression(),
+               "Random_Forest" : RandomForestRegressor(max_depth=2, random_state=0),
+               "AdaBoost" : AdaBoostRegressor(n_estimators=100, random_state=0),}
 
-    # Evaluation des modèles linéaires
-    for name, model in models_lm:
-        print(f"Evaluating model lm: {name}")
-        evaluation_model(model, X_train[model.feature_names_in_],
-                         y_train, X_test[model.feature_names_in_],
-                         y_test, name)
+    # Iterate over each feature selection method
+    for select_name, select in zip(select_names, selects):
+        # Apply the feature selection method
+        X_train_selected = X_train[select]
+        X_test_selected = X_test[select]
 
-    # Fit et evaluation d'un modèle ElasticNet sur l'ensemble des features
-    model_enet = lm.ElasticNetCV(alphas=np.logspace(-6, 6, 13))
-    model_enet.fit(X_train, y_train)
-    evaluation_model(model_enet, X_train, y_train,
-                     X_test, y_test, "Elastic Net")
+        # Iterate over each model
+        for model_name, model in models.items():
+            print(f"Evaluating {model_name} with {select_name}")
 
-    # Fit et evaluation d'un modèle Random Forest sur l'ensemble des features
-    model_rf = RandomForestRegressor(max_depth=2, random_state=0)
-    model_rf.fit(X_train, y_train)
-    evaluation_model(model_rf, X_train, y_train,
-                     X_test, y_test, "Random Forest")
+            # Fit and evaluate the model
+            evaluation_model(model, X_train_selected, y_train, X_test_selected, y_test,
+                             f"{model_name} with {select_name}")
+
+    # sauvegarder les modèles pour pouvoir continuer
+    LinReg = LinearRegression().fit(X_train[select_lasso], y_train)
+    save_model(LinReg, "linear_regression")
+
+    RandFor = RandomForestRegressor(max_depth=2, random_state=0).fit(X_train, y_train)
+    save_model(RandFor, "random_forest")
+
+    AdaB = AdaBoostRegressor(n_estimators=100, random_state=0).fit(X_train, y_train)
+    save_model(AdaB, "ada_boost")
+
