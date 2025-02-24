@@ -1,0 +1,228 @@
+RAPPORT TECHNIQUE : SYSTÈME DE PRÉDICTION DE NOTES D'APPRENANTS
+
+1. CONCEPTION DU LOGICIEL
+------------------------
+
+1.1 Architecture
+- Pattern MVC (Model-View-Controller) 
+- Modules principaux :
+  * models/ : Gestion de l'input et modèles ML
+  * views/ : Interface utilisateur
+  * controllers/ : Logique métier
+  * main.py : Point d'entrée
+
+1.2 Structure des données
+- Données d'entrée :
+  * logs.csv : Activités des apprenants en forme de logs
+  * notes.csv : Notes des apprenants
+- Features calculées :
+  * Temporelles (nb_jours_avec_action, tempsdiff_jours, etc.)
+  * Comportementales (nb_actions, moyenne_actions_par_jour, etc.)
+  * Contextuelles (nb_contexte, nb_evenement, etc.)
+
+2. INTERFACE UTILISATEUR 
+-----------------------
+
+2.1 Composants principaux
+- Fenêtre principale (600x400)
+- Bouton de sélection de fichier
+- Zone d'affichage du nom du fichier sélectionné
+- Bouton de prédiction
+- Zone d'affichage des résultats
+
+2.2 Flux utilisateur
+1. Sélection du fichier de logs
+2. Vérification du fichier sélectionné
+3. Lancement de la prédiction
+4. Interprétation des résultats
+
+3. PRINCIPAUX ALGORITHMES
+------------------------
+
+3.1 Prétraitement des données (preprocessing.py)
+- Nettoyage des logs
+- Création des features
+- Normalisation des données
+- Alignement des colonnes avec expected_columns.csv
+
+3.2 Création des features (features_creation.py)
+Features principales :
+- Temporelles :
+  * moyenne_actions_par_jour()
+  * tempsdiff()
+  * constance_activite()
+- Comportementales :
+  * nb_actions()
+  * variabilite_activite()
+  * pourcentage_nuit/matin/aprem/soir()
+- Contextuelles :
+  * nb_contexte_gen()
+  * nb_evenement()
+  * nb_specifications()
+
+3.3 Sélection des features (feature_selection.py)
+Deux méthodes implémentées :
+1. Forward Feature Selection
+   - Sélection itérative basée sur l'amélioration du R² ajusté
+   - Seuil d'amélioration paramétrable (taux)
+
+2. Lasso Feature Selection
+   - Utilisation de LassoCV avec validation croisée
+   - Sélection basée sur les coefficients non nuls
+
+3.4 Modèles de prédiction (model.py)
+Modèles testés :
+- Régression linéaire
+- Random Forest
+- AdaBoost
+
+Métriques d'évaluation :
+- RMSE (Root Mean Square Error)
+- R² (Coefficient de détermination)
+
+4. FLUX DE DONNÉES
+-----------------
+
+4.1 Pipeline de traitement
+1. Lecture des fichiers (read_files.py)
+2. Filtrage des données
+3. Création des features
+4. Prétraitement
+5. Sélection des features
+6. Entraînement du modèle
+7. Prédiction
+
+4.2 Gestion des erreurs
+- Validation des fichiers d'entrée
+- Gestion des valeurs manquantes
+- Messages d'erreur explicites dans l'interface
+
+5. PERFORMANCES
+--------------
+
+5.1 Optimisations
+- Utilisation de pandas pour le traitement vectoriel
+- Mise en cache des modèles entraînés
+- Normalisation des données
+
+5.2 Limitations
+- Nécessite un format spécifique des logs
+- Dépendant de la qualité des données d'entrée
+- Temps de traitement pour les gros volumes
+
+6. DÉPENDANCES
+-------------
+
+Bibliothèques principales :
+- pandas : Manipulation des données
+- scikit-learn : Modèles ML
+- tkinter : Interface graphique
+- joblib : Persistance des modèles
+- numpy : Calculs numériques 
+
+ÉTAPES DE CONSTRUCTION DU MODÈLE
+-------------------------------
+
+1. Lecture des données (read_files.py)
+------------------------------------
+- Fonctions principales :
+  * get_logs() : Lecture du fichier logs.csv
+  * get_notes() : Lecture du fichier notes.csv
+  * filter_logs() : Harmonisation avec les notes
+  * filter_notes() : Harmonisation avec les logs
+  * split_columns() : Séparation de la colonne contexte
+
+Particularités :
+- Gestion des chemins par défaut (DEFAULT_LOGS, DEFAULT_NOTES)
+- Validation du format des fichiers
+- Parsing des dates avec pandas
+- Gestion des erreurs avec logging
+
+2. Création des features (features_creation.py)
+--------------------------------------------
+Features générées :
+a) Métriques temporelles
+   - nb_jours_avec_action() : Nombre de jours d'activité
+   - tempsdiff() : Écart temporel entre activités
+   - constance_activite() : Régularité des connexions
+   - periode_moyen_activite() : Distribution temporelle
+
+b) Métriques comportementales
+   - nb_actions() : Volume d'activité
+   - moyenne_actions_par_jour() : Intensité d'utilisation
+   - variabilite_activite() : Variation du comportement
+   - pourcentage_periode() : Distribution jour/nuit
+
+c) Métriques contextuelles
+   - nb_contexte() : Diversité des contextes
+   - nb_evenement() : Types d'interactions
+   - nb_chaque_evenement() : Distribution des actions
+   - top_evenement() : Action principale
+
+3. Prétraitement (preprocessing.py)
+--------------------------------
+Pipeline de prétraitement :
+1. Agrégation des features (creer_df)
+   - Fusion des features par pseudo
+   - Gestion des valeurs manquantes
+
+2. Nettoyage des données
+   - enlever_correlation_complets() : Élimination des redondances
+   - encodage() : Transformation des variables catégorielles
+   - scaling() : Normalisation des variables numériques
+   - df_transformer() : Standardisation des noms de colonnes
+
+3. Validation des données
+   - align_columns() : Conformité avec expected_columns.csv
+   - separation_train_test() : Split des données
+
+4. Sélection des features (feature_selection.py)
+---------------------------------------------
+Deux approches implémentées :
+
+a) Forward Feature Selection
+   - Sélection progressive des features
+   - Critère : amélioration du R² ajusté
+   - Paramètres ajustables :
+     * taux : seuil d'amélioration minimum
+     * validation croisée pour robustesse
+
+b) Lasso Feature Selection
+   - Régularisation L1 avec LassoCV
+   - Sélection automatique par importance
+   - Avantages :
+     * Gestion de la multicolinéarité
+     * Réduction automatique de dimension
+
+5. Construction du modèle (model.py)
+---------------------------------
+Modèles implémentés :
+
+a) Régression linéaire
+   - Baseline model
+   - Interprétabilité des coefficients
+   - Métriques : R², RMSE
+
+b) Random Forest
+   - Gestion non-linéarité
+   - Hyperparamètres :
+     * max_depth=2
+     * random_state=0
+
+c) AdaBoost
+   - Boosting séquentiel
+   - Paramètres :
+     * n_estimators=100
+     * random_state=0
+
+Fonctionnalités :
+- Sauvegarde des modèles (save_model)
+- Évaluation comparative (evaluation_model)
+- Visualisation des performances
+- Gestion des warnings de convergence
+
+Cette architecture modulaire permet :
+1. Une maintenance facilitée
+2. Des tests unitaires ciblés
+3. Une évolution flexible du système
+4. Une réutilisation des composants 

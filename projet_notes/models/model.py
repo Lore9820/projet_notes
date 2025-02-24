@@ -188,5 +188,7 @@ if __name__ == '__main__':
     model = LinearRegression()
     evaluation_model(model, X_train, y_train, X_test, y_test, "Linear Regression")
 
+    save_dataframe(X_train, "X_train")
+
 
 
